@@ -20,9 +20,10 @@ pipeline {
         }
         stage('Test') {
             steps {
+                sh 'python3 -m venv venv'
                 sh """
                 . venv/bin/activate
-                make lint
+                make all
                 """
             }
         }
