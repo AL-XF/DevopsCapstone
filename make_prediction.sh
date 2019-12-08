@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 PORT=8080
+URL=aa4f06df419f511eaaac50269265c53d-354755009.us-west-2.elb.amazonaws.com
+echo "URL: $URL"
 echo "Port: $PORT"
 
 # POST method predict
@@ -25,4 +27,4 @@ curl -d '{
    }
 }'\
      -H "Content-Type: application/json" \
-     -X POST http://localhost:$PORT/predict
+     -X POST http://$URL:$PORT/predict
