@@ -7,19 +7,10 @@ pipeline {
     agent any
 
     stages {
-        stage('Build') {
+        stage('Lint') {
             agent {
                     docker { image 'python:3.7.3-stretch'}
                 }
-            steps {
-                sh 'python3 -m venv venv'
-                sh """
-                . venv/bin/activate
-                 make install
-                 """
-            }
-        }
-        stage('Test') {
             steps {
                 sh 'python3 -m venv venv'
                 sh """
@@ -32,11 +23,11 @@ pipeline {
         stage('Build Image') {
             steps{
                 script {
-                dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
                 }
             }
         }
-        stage('Deploy to Docker Hub') {
+        stage('Upload to Docker Hub') {
             steps{
                 script {
                     docker.withRegistry( '', registryCredential ) {
