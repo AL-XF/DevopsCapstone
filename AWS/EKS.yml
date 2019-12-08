@@ -1,0 +1,104 @@
+Description: >
+    Fusu Xie / Udacity Capstone 2019
+    EKS clusters depolyment
+
+Parameters:
+  EnvironmentName:
+      Description: An Environment name that will be prefixed to resources
+      Type: String
+
+  KeyPairName:
+    Description: The name of an existing public/private key pair, which allows you
+      to securely connect to your instance after it launches
+    Type: AWS::EC2::KeyPair::KeyName
+
+  RemoteAccessCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: The CIDR IP range that is permitted to access the instances. We recommend that you set this value to a trusted IP range.
+    Type: String
+
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. This string can include
+      numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start
+      or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: quickstart-amazon-eks/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+
+  NodeInstanceType:
+    Default: t3.medium
+    ConstraintDescription: Must be a valid EC2 instance type
+    Description: The type of EC2 instance for the node instances.
+    Type: String
+
+  NodeGroupName:
+    Default: Default
+    Description: The name for EKS node group.
+    Type: String
+
+
+
+Resources:
+  EKSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/amazon-eks.template.yaml'
+      Parameters:
+        PublicSubnet1ID: 
+          Fn::ImportValue:
+            !Sub "${EnvironmentName}-PUB1-SN"
+        PublicSubnet2ID: 
+          Fn::ImportValue:
+            !Sub "${EnvironmentName}-PUB2-SN"
+        PublicSubnet3ID: 
+          Fn::ImportValue:
+            !Sub "${EnvironmentName}-PUB3-SN"
+        KeyPairName: !Ref KeyPairName
+        PrivateSubnet1ID: 
+          Fn::ImportValue:
+            !Sub "${EnvironmentName}-PRI1-SN"
+        PrivateSubnet2ID: 
+          Fn::ImportValue:
+            !Sub "${EnvironmentName}-PRI2-SN"
+        PrivateSubnet3ID: 
+          Fn::ImportValue:
+            !Sub "${EnvironmentName}-PRI3-SN"
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        NumberOfNodes: 3
+        MaxNumberOfNodes: 3
+        NodeGroupName: !Ref NodeGroupName
+        NodeVolumeSize: 20
+        NodeInstanceType: !Ref NodeInstanceType
+        RemoteAccessCIDR: !Ref RemoteAccessCIDR
+        VPCID: 
+          Fn::ImportValue:
+            !Sub "${EnvironmentName}-VPCID"
+        KubernetesVersion: "1.14"
+        ProvisionClusterAutoScaler: Disabled
+        EfsStorageClass: Disabled
+
+Outputs: 
+  KubeConfigPath:
+    Value: !GetAtt EKSStack.Outputs.KubeConfigPath
+  HelmLambdaArn:
+    Value: !GetAtt EKSStack.Outputs.HelmLambdaArn
+  KubeManifestLambdaArn:
+    Value: !GetAtt EKSStack.Outputs.KubeManifestLambdaArn
+  BastionIP:
+    Value: !GetAtt EKSStack.Outputs.BastionIP
+  EKSClusterName:
+    Value: !GetAtt EKSStack.Outputs.EKSClusterName
